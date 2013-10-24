@@ -1,0 +1,7 @@
+import sys; sys.__plen = len(sys.path)
+./setuptools-0.6c11-py2.7.egg
+./Twisted-13.0.0-py2.7.egg
+./zope.interface-4.0.5-py2.7.egg
+./autobahn-0.5.14-py2.7.egg
+./autobahntestsuite-0.5.5-py2.7.egg
+import sys; new=sys.path[sys.__plen:]; del sys.path[sys.__plen:]; p=getattr(sys,'__egginsert',0); sys.path[p:p]=new; sys.__egginsert = p+len(new)
