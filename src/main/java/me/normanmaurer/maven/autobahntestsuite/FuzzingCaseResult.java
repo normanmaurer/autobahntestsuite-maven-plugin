@@ -1,3 +1,18 @@
+/*
+ * Copyright 2013 The Apache Software Foundation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package me.normanmaurer.maven.autobahntestsuite;
 
 
@@ -11,22 +26,33 @@ public class FuzzingCaseResult {
         UNCLEAN,
         FAILED_BY_CLIENT,
         INFORMATIONAL,
-        UNIMPLEMENTED
+        UNIMPLEMENTED;
+
+        static Behavior parse(String value) {
+            if (value.equals("NON-STRICT")) {
+                return NON_STRICT;
+            } else if (value.equals("WRONG CODE")) {
+                return WRONG_CODE;
+            } else if (value.equals("FAILED BY CLIENT")) {
+                return FAILED_BY_CLIENT;
+            }
+            return valueOf(value);
+        }
     }
     private final String caseName;
     private final Behavior behavior;
     private final Behavior behaviorClose;
     private final long duration;
-    private final long remoteCloseCode;
+    private final Long remoteCloseCode;
     private final String reportFile;
 
-    FuzzingCaseResult(String caseName, Behavior behavior, Behavior behaviorClose, long duration, long remoteCloseCode, String reportFile) {
+    FuzzingCaseResult(String caseName, Behavior behavior, Behavior behaviorClose, long duration, Long remoteCloseCode, String reportFile) {
         this.caseName = caseName;
         this.behavior = behavior;
         this.behaviorClose = behaviorClose;
         this.duration = duration;
         this.remoteCloseCode = remoteCloseCode;
-        this.reportFile = reportFile;
+        this.reportFile = reportFile.replace(".json", ".html");
     }
 
     public String caseName() {
@@ -55,7 +81,7 @@ public class FuzzingCaseResult {
 
     @Override
     public String toString() {
-        return "case=" + caseName + ", behavior=" + behavior.name() + ", behaviorClose=" + behaviorClose.name() +
-                ", duration=" + duration + ", remoteCloseCode=" + remoteCloseCode + ", reportFile=" + reportFile;
+        return "[" + caseName + "] behavior: " + behavior.name() + ", behaviorClose: " + behaviorClose.name() +
+                ", duration: " + duration + "ms, remoteCloseCode: " + remoteCloseCode + ", reportFile: " + reportFile;
     }
 }

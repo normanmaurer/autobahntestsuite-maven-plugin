@@ -28,6 +28,7 @@ import org.python.util.PythonInterpreter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,11 +37,14 @@ import java.util.Map;
  * Allows to run the fuzzingclient of the <a href="http://autobahn.ws/testsuite/" >autobahntestsuite</a>.
  */
 public class AutobahnTestSuite {
+
     private static final String OUTDIR = "target/autobahntestsuite-report";
+    private static final OutputStream DEV_NULL = new DevNullOutputStream();
     public static List<FuzzingCaseResult> runFuzzingClient(String agent, String url, Map options,
                                         List<String> cases, List<String> excludeCases) {
         PythonInterpreter interp =
                 new PythonInterpreter();
+        interp.setErr(DEV_NULL);
         interp.exec("import sys");
         interp.exec("from autobahntestsuite import wstest");
         PyDictionary opts = new PyDictionary();
@@ -89,26 +93,32 @@ public class AutobahnTestSuite {
         JSONObject agent = (JSONObject) object.get(agentString);
 
         for (Object cases: agent.keySet()) {
-            System.out.println("C=" + cases);
             JSONObject c = (JSONObject) agent.get(cases);
             String behavior = (String) c.get("behavior");
             String behaviorClose = (String) c.get("behaviorClose");
             Number duration = (Number) c.get("duration");
             Number remoteCloseCode = (Number) c.get("remoteCloseCode");
 
-            Long dur;
-            if (duration == null) {
-                dur = null;
+            Long code;
+            if (remoteCloseCode == null) {
+                code = null;
             } else {
-                dur = duration.longValue();
+                code = remoteCloseCode.longValue();
             }
             String reportfile = (String) c.get("reportfile");
             FuzzingCaseResult result = new FuzzingCaseResult(cases.toString(),
-                    FuzzingCaseResult.Behavior.valueOf(behavior), FuzzingCaseResult.Behavior.valueOf(behaviorClose),
-                    dur, remoteCloseCode.longValue(), reportfile);
+                    FuzzingCaseResult.Behavior.parse(behavior), FuzzingCaseResult.Behavior.parse(behaviorClose),
+                    duration.longValue(), code, OUTDIR + "/" + reportfile);
 
             results.add(result);
         }
         return results;
+    }
+
+    private final static class DevNullOutputStream extends OutputStream {
+        @Override
+        public void write(int b) throws IOException {
+            // > /dev/null
+        }
     }
 }
