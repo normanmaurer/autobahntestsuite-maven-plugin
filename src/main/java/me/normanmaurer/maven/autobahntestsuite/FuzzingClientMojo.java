@@ -28,6 +28,10 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -36,6 +40,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Mojo which execute the autobahntestsuite
@@ -55,8 +60,11 @@ public class FuzzingClientMojo
     @Parameter(defaultValue = "autobahntestsuite-agent", property="agent", required = true)
     private String agent;
 
-    @Parameter(defaultValue = "ws://127.0.0.1:9001", property="url", required = true)
-    private String url;
+    @Parameter(defaultValue = "127.0.0.1", property="host", required = true)
+    private String host;
+
+    @Parameter(defaultValue = "9001", property="port", required = true)
+    private int port;
 
     @Parameter(property = "cases")
     private List<String> cases;
@@ -67,12 +75,16 @@ public class FuzzingClientMojo
     @Parameter(property = "mainClass")
     private String mainClass;
 
+    @Parameter(property = "waitTime")
+    private long waitTime;
+
     @Parameter(property = "failOnNonStrict")
     private boolean failOnNonStrict;
 
     @Component
     private MavenProject project;
 
+    @SuppressWarnings("unchecked")
     private ClassLoader getClassLoader() throws MojoExecutionException {
         try {
             List<String> classpathElements = project.getCompileClasspathElements();
@@ -94,42 +106,100 @@ public class FuzzingClientMojo
             throws MojoExecutionException, MojoFailureException {
         Thread.currentThread().setContextClassLoader(getClassLoader());
 
-        if (mainClass != null) {
-            try {
-               Thread.currentThread().getContextClassLoader().loadClass(mainClass).newInstance();
-            } catch (Exception e) {
-                throw new MojoExecutionException("Unable to start server for class " + mainClass, e);
-            }
-        }
+        final AtomicReference<Exception> error = new AtomicReference<Exception>();
+        Thread runner = null;
+        try {
+            if (mainClass != null) {
+                runner = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(mainClass);
+                            Method main = clazz.getMethod("main", String[].class);
+                            main.invoke(null, (Object) new String[] { String.valueOf(port) });
+                        } catch (Exception e) {
+                            error.set(e);
+                        }
+                    }
+                });
+                runner.setDaemon(true);
+                runner.start();
+                try {
+                    // wait for 50 milliseconds to give the server some time to startup
+                    Thread.sleep(500);
+                } catch (InterruptedException ignore) {
+                    // ignore
+                }
+                if (waitTime <= 0) {
+                    // use 10 seconds as default
+                    waitTime = 10000;
+                }
 
-        if (cases == null || cases.isEmpty()) {
-            cases = ALL_CASES;
-        }
-        if (excludeCases == null) {
-            excludeCases = Collections.emptyList();
-        }
-        List<FuzzingCaseResult> results = AutobahnTestSuite.runFuzzingClient(agent, url,  OPTIONS, cases, excludeCases);
-        List<FuzzingCaseResult> failed = new ArrayList<FuzzingCaseResult>();
-        for (FuzzingCaseResult result: results) {
-            FuzzingCaseResult.Behavior behavior = result.behavior();
-            if (failOnNonStrict && behavior == FuzzingCaseResult.Behavior.NON_STRICT) {
-                failed.add(result);
-            } else if (behavior!= FuzzingCaseResult.Behavior.OK
-                    && behavior != FuzzingCaseResult.Behavior.INFORMATIONAL
-                    && behavior != FuzzingCaseResult.Behavior.NON_STRICT) {
-                failed.add(result);
+                // Wait until the server accepts connections
+                long sleepTime = waitTime / 10;
+                for (int i = 0; i < 10; i++) {
+                    Throwable cause = error.get();
+                    if (cause != null) {
+                        throw new MojoExecutionException("Unable to start server", cause);
+                    }
+                    Socket socket = new Socket();
+                    try {
+                        socket.connect( new InetSocketAddress("127.0.0.1", port));
+                        break;
+                    } catch (IOException e) {
+                        try {
+                            Thread.sleep(sleepTime);
+                        } catch (InterruptedException ignore) {
+                            // ignore
+                        }
+                    } finally {
+                        try {
+                            socket.close();
+                        } catch (IOException e) {
+                            // ignore
+                        }
+                    }
+                    if (i == 9) {
+                        throw new MojoExecutionException("Unable to connect to server", error.get());
+                    }
+                }
             }
-        }
-        if (!failed.isEmpty()) {
-            StringBuilder sb = new StringBuilder("\nFailed test cases:\n");
-            for (FuzzingCaseResult result: failed) {
-                sb.append("\t");
-                sb.append(result.toString());
-                sb.append("\n");
+
+
+            if (cases == null || cases.isEmpty()) {
+                cases = ALL_CASES;
             }
-            throw new MojoFailureException(sb.toString());
-        } else {
-            getLog().info("All test cases passed" );
+            if (excludeCases == null) {
+                excludeCases = Collections.emptyList();
+            }
+            List<FuzzingCaseResult> results = AutobahnTestSuite.runFuzzingClient(
+                    agent, "ws://" + host + ":" + port,  OPTIONS, cases, excludeCases);
+            List<FuzzingCaseResult> failed = new ArrayList<FuzzingCaseResult>();
+            for (FuzzingCaseResult result: results) {
+                FuzzingCaseResult.Behavior behavior = result.behavior();
+                if (failOnNonStrict && behavior == FuzzingCaseResult.Behavior.NON_STRICT) {
+                    failed.add(result);
+                } else if (behavior!= FuzzingCaseResult.Behavior.OK
+                        && behavior != FuzzingCaseResult.Behavior.INFORMATIONAL
+                        && behavior != FuzzingCaseResult.Behavior.NON_STRICT) {
+                    failed.add(result);
+                }
+            }
+            if (!failed.isEmpty()) {
+                StringBuilder sb = new StringBuilder("\nFailed test cases:\n");
+                for (FuzzingCaseResult result: failed) {
+                    sb.append("\t");
+                    sb.append(result.toString());
+                    sb.append("\n");
+                }
+                throw new MojoFailureException(sb.toString());
+            } else {
+                getLog().info("All test cases passed" );
+            }
+        } finally {
+             if (runner != null) {
+                 runner.interrupt();
+             }
         }
     }
 }
