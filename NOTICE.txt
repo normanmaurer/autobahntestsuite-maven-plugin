@@ -1,0 +1,90 @@
+
+                            The AutobahnTestsuite Maven Plugin
+                            =================
+
+Please visit the Netty web site for more information:
+
+  * http://github.com/normanmaurer/autobahntestsuite-maven-plugin/
+
+Copyright 2013 The Netty Project
+
+The Netty Project licenses this file to you under the Apache License,
+version 2.0 (the "License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at:
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations
+under the License.
+
+Also, please refer to each LICENSE.<component>.txt file, which is located in
+the 'license' directory of the distribution file, for the license terms of the
+components that this product depends on.
+
+-------------------------------------------------------------------------------
+This product bundles autobahn
+
+  * LICENSE:
+    * license/LICENSE.autobahn.txt (ASL2)
+  * HOMEPAGE:
+    * http://autobahn.ws
+
+This product contains a slightly modified version of autobahntestsuite
+
+  * LICENSE:
+    * license/LICENSE.autobahntestsuite.txt (ASL2)
+  * HOMEPAGE:
+    * http://autobahn.ws
+
+This product bundles jinja2
+
+  * LICENSE:
+    * license/LICENSE.jinja2.txt (BSD)
+  * HOMEPAGE:
+    * http://jinja.pocoo.org
+
+This product bundles klein
+
+  * LICENSE:
+    * license/LICENSE.klein.txt (MIT)
+  * HOMEPAGE:
+    * https://github.com/twisted/klein
+
+This product bundles markupsafe
+
+  * LICENSE:
+    * license/LICENSE.markupsafe.txt (BSD)
+  * HOMEPAGE:
+    * https://github.com/mitsuhiko/markupsafe
+
+This product bundles setuptools
+
+  * LICENSE:
+    * license/LICENSE.setuptools.txt (ZPL-2.0)
+  * HOMEPAGE:
+    * https://pypi.python.org/pypi/setuptools
+
+This product contains a patched version of twisted to work with jython
+
+  * LICENSE:
+    * license/LICENSE.twisted.txt (MIT)
+  * HOMEPAGE:
+    * http://twistedmatrix.com/trac/
+    * https://github.com/normanmaurer/twisted/tree/jython_support
+
+This product bundles werkzeug
+
+  * LICENSE:
+    * license/LICENSE.werkzeug.txt (BSD)
+  * HOMEPAGE:
+    * http://werkzeug.pocoo.org
+
+This product bundles zope interface
+
+  * LICENSE:
+    * license/LICENSE.zope.txt (ZPL-2.0)
+  * HOMEPAGE:
+    * https://pypi.python.org/pypi/zope.interface/
