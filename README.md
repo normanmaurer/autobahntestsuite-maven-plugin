@@ -1,7 +1,7 @@
 Maven Autobahn Testsuite Plugin
 ==============================
 
-Maven plugin which allows to run the ([Autobahn Testsuite](http://autobahn.ws/testsuite/)) as part of your maven build.
+Maven plugin which allows to run the [Autobahn Testsuite](http://autobahn.ws/testsuite/) as part of your maven build.
 
 # Requirements
 If you want to have the Testsuite executed as part of your build you need to provide a Main class which will
@@ -10,7 +10,7 @@ startup a WebSockets server which needs to behave like:
 * Echo back Text/Binary frames
 * Echo back Ping frames as Pong frames
 * Ignore Pong frames
-* Handle everything else like stated in the ([rfc6455](http://tools.ietf.org/html/rfc6455))
+* Handle everything else like stated in the [rfc6455](http://tools.ietf.org/html/rfc6455)
 
 
 # Adding it to your build
