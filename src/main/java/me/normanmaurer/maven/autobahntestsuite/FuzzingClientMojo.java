@@ -43,7 +43,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Mojo which execute the autobahntestsuite
+ * Mojo which execute the FuzzingClient which is part of the <a href="http://autobahn.ws/testsuite/">Autobahn Testsuite</a>
  */
 @Mojo(name = "fuzzingclient", defaultPhase = LifecyclePhase.INTEGRATION_TEST,
 requiresDependencyResolution = ResolutionScope.TEST)
@@ -57,27 +57,52 @@ public class FuzzingClientMojo
         OPTIONS = Collections.unmodifiableMap(opts);
     }
 
+    /**
+     * The name of the agent which will be used in the generated reports.
+     */
     @Parameter(defaultValue = "autobahntestsuite-agent", property="agent", required = true)
     private String agent;
 
+    /**
+     * The ipaddress of the host on which the Server will run.
+     */
     @Parameter(defaultValue = "127.0.0.1", property="host", required = true)
     private String host;
 
+    /**
+     * The port on which the Server will listen.
+     */
     @Parameter(defaultValue = "9001", property="port", required = true)
     private int port;
 
+    /**
+     * A list of cases to run during the test. Default is to run all cases.
+     */
     @Parameter(property = "cases")
     private List<String> cases;
 
+    /**
+     * A list of cases to exclude during the test. Default is to exclude none.
+     */
     @Parameter(property = "excludeCases")
     private List<String> excludeCases;
 
+    /**
+     * The class which is used to startup the Server. It will pass the port in as argument to the main(...) method.
+     */
     @Parameter(property = "mainClass")
     private String mainClass;
 
+    /**
+     * The number of milliseconds to max wait for the server to startup. Default is 10000 ms
+     */
     @Parameter(property = "waitTime")
     private long waitTime;
 
+    /**
+     * Configure if the Testsuite should be failed on non strict behaviour of the Server. Default is to not fail, as it
+     * is still conform to the RFC.
+     */
     @Parameter(property = "failOnNonStrict")
     private boolean failOnNonStrict;
 
