@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>autobahntestsuite-maven-plugin by normanmaurer</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>autobahntestsuite-maven-plugin</h1>
+        <p>Maven plugin that runs tests of the Autobahn Testsuite as part of your build</p>
+
+        <p class="view"><a href="https://github.com/normanmaurer/autobahntestsuite-maven-plugin">View the Project on GitHub <small>normanmaurer/autobahntestsuite-maven-plugin</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/normanmaurer/autobahntestsuite-maven-plugin/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/normanmaurer/autobahntestsuite-maven-plugin/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/normanmaurer/autobahntestsuite-maven-plugin">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="maven-autobahn-testsuite-plugin" class="anchor" href="#maven-autobahn-testsuite-plugin"><span class="octicon octicon-link"></span></a>Maven Autobahn Testsuite Plugin</h1>
+
+<p>Maven plugin which allows to run the <a href="http://autobahn.ws/testsuite/">Autobahn Testsuite</a> as part of your maven build.</p>
+
+<h1>
+<a name="requirements" class="anchor" href="#requirements"><span class="octicon octicon-link"></span></a>Requirements</h1>
+
+<p>If you want to have the Testsuite executed as part of your build you need to provide a Main class which will
+startup a WebSockets server which needs to behave like:</p>
+
+<ul>
+<li>Echo back Text/Binary frames</li>
+<li>Echo back Ping frames as Pong frames</li>
+<li>Ignore Pong frames</li>
+<li>Handle everything else like stated in the <a href="http://tools.ietf.org/html/rfc6455">rfc6455</a>
+</li>
+</ul><h1>
+<a name="adding-it-to-your-build" class="anchor" href="#adding-it-to-your-build"><span class="octicon octicon-link"></span></a>Adding it to your build</h1>
+
+<p>Adding the Testsuite and so make it part of your build is as easy as adding it to the pom.xml file of your
+maven project:</p>
+
+<pre><code>&lt;build&gt;
+  &lt;plugin&gt;
+    &lt;groupId&gt;me.normanmaurer.maven.autobahntestsuite&lt;/groupId&gt;
+    &lt;artifactId&gt;autobahntestsuite-maven-plugin&lt;/artifactId&gt;
+    &lt;version&gt;0.1.0-SNAPSHOT&lt;/version&gt;
+    &lt;configuration&gt;
+      &lt;host&gt;127.0.0.1&lt;/host&gt;
+      &lt;port&gt;9001&lt;/port&gt;
+      &lt;mainClass&gt;io.netty.testsuite.websockets.autobahn.AutobahnServer&lt;/mainClass&gt;
+      &lt;cases&gt;
+        &lt;case&gt;*&lt;/case&gt;
+      &lt;/cases&gt;
+      &lt;excludeCases&gt;&lt;/excludeCases&gt;
+      &lt;failOnNonStrict&gt;false&lt;/failOnNonStrict&gt;
+    &lt;/configuration&gt;
+    &lt;executions&gt;
+      &lt;execution&gt;
+        &lt;phase&gt;test&lt;/phase&gt;
+        &lt;goals&gt;
+          &lt;goal&gt;fuzzingclient&lt;/goal&gt;
+        &lt;/goals&gt;
+      &lt;/execution&gt;
+    &lt;/executions&gt;
+  &lt;/plugin&gt;
+&lt;/build&gt;
+</code></pre>
+
+<p>This will execute the fuzzingclient tests as part of the test phase and fail the phase if one of the test cases
+fails.</p>
+
+<p>After the run was complete you will find test-reports in the <code>target/autobahntestsuite-report</code>, which contains all
+the details about every test case.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/normanmaurer">normanmaurer</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
