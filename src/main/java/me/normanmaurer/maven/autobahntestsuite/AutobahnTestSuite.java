@@ -50,7 +50,7 @@ public class AutobahnTestSuite {
         opts.__setitem__(new PyString("mode"), new PyString("fuzzingclient"));
         interp.set("opts", opts);
 
-        PyDictionary spec = createFuzzclientSpec(agent, url, options, cases, excludeCases);
+        PyDictionary spec = createFuzzingClientSpec(agent, url, options, cases, excludeCases);
         interp.set("spec", spec);
         interp.exec("wstest.start(opts, spec)");
 
@@ -62,7 +62,7 @@ public class AutobahnTestSuite {
     }
 
     @SuppressWarnings("unchecked")
-    private static PyDictionary createFuzzclientSpec(String agent, String url, Map options,
+    private static PyDictionary createFuzzingClientSpec(String agent, String url, Map options,
                                            List<String> cases, List<String> excludeCases) {
         PyDictionary dict = new PyDictionary();
 
