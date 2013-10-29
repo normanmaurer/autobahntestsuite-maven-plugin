@@ -72,7 +72,7 @@ public class FuzzingClientMojo
     /**
      * The port on which the Server will listen.
      */
-    @Parameter(defaultValue = "9001", property="port", required = true)
+    @Parameter(defaultValue = "-1", property="port", required = true)
     private int port;
 
     /**
@@ -90,7 +90,7 @@ public class FuzzingClientMojo
     /**
      * The class which is used to startup the Server. It will pass the port in as argument to the main(...) method.
      */
-    @Parameter(property = "mainClass")
+    @Parameter(property = "mainClass", required = true)
     private String mainClass;
 
     /**
@@ -131,65 +131,66 @@ public class FuzzingClientMojo
             throws MojoExecutionException, MojoFailureException {
         Thread.currentThread().setContextClassLoader(getClassLoader());
 
+        if (port == -1) {
+            // Get some random free port
+            port = AutobahnUtils.getFreePort();
+        }
         final AtomicReference<Exception> error = new AtomicReference<Exception>();
         Thread runner = null;
         try {
-            if (mainClass != null) {
-                runner = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(mainClass);
-                            Method main = clazz.getMethod("main", String[].class);
-                            main.invoke(null, (Object) new String[] { String.valueOf(port) });
-                        } catch (Exception e) {
-                            error.set(e);
-                        }
-                    }
-                });
-                runner.setDaemon(true);
-                runner.start();
-                try {
-                    // wait for 50 milliseconds to give the server some time to startup
-                    Thread.sleep(500);
-                } catch (InterruptedException ignore) {
-                    // ignore
-                }
-                if (waitTime <= 0) {
-                    // use 10 seconds as default
-                    waitTime = 10000;
-                }
-
-                // Wait until the server accepts connections
-                long sleepTime = waitTime / 10;
-                for (int i = 0; i < 10; i++) {
-                    Throwable cause = error.get();
-                    if (cause != null) {
-                        throw new MojoExecutionException("Unable to start server", cause);
-                    }
-                    Socket socket = new Socket();
+            runner = new Thread(new Runnable() {
+                @Override
+                public void run() {
                     try {
-                        socket.connect( new InetSocketAddress("127.0.0.1", port));
-                        break;
-                    } catch (IOException e) {
-                        try {
-                            Thread.sleep(sleepTime);
-                        } catch (InterruptedException ignore) {
-                            // ignore
-                        }
-                    } finally {
-                        try {
-                            socket.close();
-                        } catch (IOException e) {
-                            // ignore
-                        }
-                    }
-                    if (i == 9) {
-                        throw new MojoExecutionException("Unable to connect to server", error.get());
+                        Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(mainClass);
+                        Method main = clazz.getMethod("main", String[].class);
+                        main.invoke(null, (Object) new String[] { String.valueOf(port) });
+                    } catch (Exception e) {
+                        error.set(e);
                     }
                 }
+            });
+            runner.setDaemon(true);
+            runner.start();
+            try {
+                // wait for 50 milliseconds to give the server some time to startup
+                Thread.sleep(500);
+            } catch (InterruptedException ignore) {
+                // ignore
+            }
+            if (waitTime <= 0) {
+                // use 10 seconds as default
+                waitTime = 10000;
             }
 
+            // Wait until the server accepts connections
+            long sleepTime = waitTime / 10;
+            for (int i = 0; i < 10; i++) {
+                Throwable cause = error.get();
+                if (cause != null) {
+                    throw new MojoExecutionException("Unable to start server", cause);
+                }
+                Socket socket = new Socket();
+                try {
+                    socket.connect( new InetSocketAddress("127.0.0.1", port));
+                    break;
+                } catch (IOException e) {
+                    try {
+                        Thread.sleep(sleepTime);
+                    } catch (InterruptedException ignore) {
+                        // ignore
+                    }
+                } finally {
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        // ignore
+                    }
+                }
+                if (i == 9) {
+                    throw new MojoExecutionException("Unable to connect to server", error.get());
+                }
+            }
 
             if (cases == null || cases.isEmpty()) {
                 cases = ALL_CASES;
