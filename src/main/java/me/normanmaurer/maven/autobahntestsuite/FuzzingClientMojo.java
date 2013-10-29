@@ -26,7 +26,18 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -105,6 +116,13 @@ public class FuzzingClientMojo
      */
     @Parameter(property = "failOnNonStrict")
     private boolean failOnNonStrict;
+
+    /**
+     * Configure if the Testsuite should generate JUnit xml reports. Those reports are often used by CI Systems. Default
+     * is true.
+     */
+    @Parameter(property = "generateJUnitXmlReports", defaultValue = "true")
+    private boolean generateJUnitXmlReports;
 
     @Component
     private MavenProject project;
@@ -200,6 +218,14 @@ public class FuzzingClientMojo
             }
             List<FuzzingCaseResult> results = AutobahnTestSuite.runFuzzingClient(
                     agent, "ws://" + host + ":" + port,  OPTIONS, cases, excludeCases);
+
+            if (generateJUnitXmlReports) {
+                try {
+                    writeJUnitXmlReport(results);
+                } catch (Exception e) {
+                    throw new MojoExecutionException("Unable to generate xml reports", e);
+                }
+            }
             List<FuzzingCaseResult> failed = new ArrayList<FuzzingCaseResult>();
             for (FuzzingCaseResult result: results) {
                 FuzzingCaseResult.Behavior behavior = result.behavior();
@@ -228,4 +254,64 @@ public class FuzzingClientMojo
              }
         }
     }
+
+
+    private void writeJUnitXmlReport(List<FuzzingCaseResult> results)
+            throws ParserConfigurationException, TransformerException {
+        DocumentBuilderFactory docFactory = DocumentBuilderFactory .newInstance();
+        DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+        String className = getClass().getName();
+        int failures = 0;
+        long suiteDuration = 0;
+        Document doc = docBuilder.newDocument();
+        Element rootElement = doc.createElement("testsuite");
+        rootElement.setAttribute("name", className);
+        rootElement.setAttribute("tests", Integer.toString(results.size()));
+        rootElement.setAttribute("errors", Integer.toString(0));
+        rootElement.setAttribute("skipped", Integer.toString(0));
+
+        for (FuzzingCaseResult r: results) {
+            Element testcase = doc.createElement("testcase");
+            testcase.setAttribute("classname", className);
+            testcase.setAttribute("name", r.caseName());
+
+            long duration = r.duration();
+            suiteDuration += duration;
+            testcase.setAttribute("time", Double.toString(duration / 1000.0));
+
+            FuzzingCaseResult.Behavior behavior = r.behavior();
+            if (failOnNonStrict && behavior == FuzzingCaseResult.Behavior.NON_STRICT) {
+                testcase.appendChild(failure(doc, r));
+                failures++;
+            } else if (behavior!= FuzzingCaseResult.Behavior.OK
+                    && behavior != FuzzingCaseResult.Behavior.INFORMATIONAL
+                    && behavior != FuzzingCaseResult.Behavior.NON_STRICT) {
+                testcase.appendChild(failure(doc, r));
+                failures++;
+            }
+
+            rootElement.appendChild(testcase);
+        }
+        rootElement.setAttribute("failures", Integer.toString(failures));
+        rootElement.setAttribute("time", Double.toString(suiteDuration / 1000.0));
+        doc.appendChild(rootElement);
+
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+
+        String filename = AutobahnTestSuite.OUTDIR + "/TEST-" + className + ".xml";
+        DOMSource source = new DOMSource(doc);
+        StreamResult result = new StreamResult(new File(filename));
+        transformer.transform(source, result);
+    }
+
+    private Element failure(Document doc, FuzzingCaseResult result) {
+        Element failure = doc.createElement("failure");
+        failure.setAttribute("type", "behaviorMissmatch");
+        failure.setNodeValue("Expected behavior=[" + FuzzingCaseResult.Behavior.OK + "] but was [" + result.behavior() + "]");
+        return failure;
+    }
+
 }

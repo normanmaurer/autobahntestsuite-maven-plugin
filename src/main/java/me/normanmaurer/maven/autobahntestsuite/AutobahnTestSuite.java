@@ -37,7 +37,7 @@ import java.util.Map;
  */
 public class AutobahnTestSuite {
 
-    private static final String OUTDIR = "target/autobahntestsuite-report";
+    static final String OUTDIR = "target/autobahntestsuite-reports";
     private static final OutputStream DEV_NULL = new DevNullOutputStream();
     public static List<FuzzingCaseResult> runFuzzingClient(String agent, String url, Map options,
                                         List<String> cases, List<String> excludeCases) {
