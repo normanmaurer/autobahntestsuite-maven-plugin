@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -55,7 +56,11 @@ public class AutobahnTestSuite {
         interp.exec("wstest.start(opts, spec)");
 
         try {
-            return parseResults(agent);
+            List<FuzzingCaseResult> results = parseResults(agent);
+            if (results == null) {
+                throw new IllegalStateException("No results");
+            }
+            return results;
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
@@ -91,6 +96,9 @@ public class AutobahnTestSuite {
         JSONObject object = (JSONObject) parser.parse(reader);
         JSONObject agent = (JSONObject) object.get(agentString);
 
+        if (agent == null) {
+            return null;
+        }
         for (Object cases: agent.keySet()) {
             JSONObject c = (JSONObject) agent.get(cases);
             String behavior = (String) c.get("behavior");
