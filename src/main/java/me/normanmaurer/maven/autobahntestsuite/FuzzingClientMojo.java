@@ -50,7 +50,6 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -64,6 +63,7 @@ public class FuzzingClientMojo
         extends AbstractMojo {
     private static final List<String> ALL_CASES = Collections.unmodifiableList(Arrays.asList("*"));
     private static final Map<String, Object> OPTIONS = Collections.<String, Object>singletonMap("version", 18);
+    private static final String AGENT = "autobahntestsuite-maven-plugin";
 
     /**
      * The port on which the Server will listen.
@@ -166,7 +166,7 @@ public class FuzzingClientMojo
                 // wait for 50 milliseconds to give the server some time to startup
                 Thread.sleep(500);
             } catch (InterruptedException ignore) {
-                // ignore
+                Thread.currentThread().interrupt();
             }
             if (waitTime <= 0) {
                 // use 10 seconds as default
@@ -199,7 +199,7 @@ public class FuzzingClientMojo
                     }
                 }
                 if (i == 9) {
-                    throw new MojoExecutionException("Unable to connect to server", error.get());
+                    throw new MojoExecutionException("Unable to connect to server in " + waitTime, error.get());
                 }
             }
 
@@ -210,13 +210,13 @@ public class FuzzingClientMojo
                 excludeCases = Collections.emptyList();
             }
             List<FuzzingCaseResult> results = AutobahnTestSuite.runFuzzingClient(
-                    "autobahntestsuite-maven-plugin", "ws://" + host + ":" + port,  OPTIONS, cases, excludeCases);
+                    AGENT, "ws://" + host + ":" + port,  OPTIONS, cases, excludeCases);
 
             if (generateJUnitXml) {
                 try {
                     writeJUnitXmlReport(results);
                 } catch (Exception e) {
-                    throw new MojoExecutionException("Unable to generate xml reports", e);
+                    throw new MojoExecutionException("Unable to generate JUnit Xml", e);
                 }
             }
             List<FuzzingCaseResult> failed = new ArrayList<FuzzingCaseResult>();
