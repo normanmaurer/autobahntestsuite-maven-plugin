@@ -63,12 +63,7 @@ requiresDependencyResolution = ResolutionScope.TEST)
 public class FuzzingClientMojo
         extends AbstractMojo {
     private static final List<String> ALL_CASES = Collections.unmodifiableList(Arrays.asList("*"));
-    private static final Map<String, Object> OPTIONS;
-    static {
-        Map<String, Object> opts = new HashMap<String, Object>();
-        opts.put("version", 18);
-        OPTIONS = Collections.unmodifiableMap(opts);
-    }
+    private static final Map<String, Object> OPTIONS = Collections.<String, Object>singletonMap("version", 18);
 
     /**
      * The port on which the Server will listen.
