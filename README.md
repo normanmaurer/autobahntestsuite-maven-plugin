@@ -25,22 +25,26 @@ maven project:
           <!-- the server. -->
           <mainClass>io.netty.testsuite.websockets.autobahn.AutobahnServer</mainClass>
 
-
           <!-- Optional configuration -->
           <!-- ---------------------- -->
           <!-- The port to bind the server on. Default is to choose a random free port. -->
           <port>-1</port>
+
           <!-- The number of milliseconds to wait for the server to startup. Default is 10000 ms. -->
           <waitTime>10000</waitTime>
+
           <!-- Specify if a JUnit compatible Xml file will be generated. This can be used by most CI's. -->
           <!-- Default is true -->
           <generateJUnitXml>true</generateJUnitXml>
+
           <!-- A list of cases to execute. Default is to execute all via *.-->
           <cases>
             <case>*</case>
           </cases>
+
           <!-- A list of cases to exclude. Default is none. --> 
           <excludeCases></excludeCases>
+
           <!-- Specify if the plugin should fail on non strict behaviour. Default is false. -->
           <failOnNonStrict>false</failOnNonStrict>
         </configuration>
