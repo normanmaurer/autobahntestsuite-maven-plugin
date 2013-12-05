@@ -130,7 +130,7 @@ public class FuzzingClientMojo
     @SuppressWarnings("unchecked")
     private ClassLoader getClassLoader() throws MojoExecutionException {
         try {
-            List<String> classpathElements = project.getCompileClasspathElements();
+            List<String> classpathElements = project.getTestClasspathElements();
             classpathElements.add(project.getBuild().getOutputDirectory() );
             classpathElements.add(project.getBuild().getTestOutputDirectory() );
             URL urls[] = new URL[classpathElements.size()];
