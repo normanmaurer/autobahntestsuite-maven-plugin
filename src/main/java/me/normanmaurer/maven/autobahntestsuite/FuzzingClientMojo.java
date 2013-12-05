@@ -41,10 +41,12 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -67,18 +69,6 @@ public class FuzzingClientMojo
         opts.put("version", 18);
         OPTIONS = Collections.unmodifiableMap(opts);
     }
-
-    /**
-     * The name of the agent which will be used in the generated reports.
-     */
-    @Parameter(defaultValue = "autobahntestsuite-agent", property="agent", required = true)
-    private String agent;
-
-    /**
-     * The ipaddress of the host on which the Server will run.
-     */
-    @Parameter(defaultValue = "127.0.0.1", property="host", required = true)
-    private String host;
 
     /**
      * The port on which the Server will listen.
@@ -121,8 +111,8 @@ public class FuzzingClientMojo
      * Configure if the Testsuite should generate JUnit xml reports. Those reports are often used by CI Systems. Default
      * is true.
      */
-    @Parameter(property = "generateJUnitXmlReports", defaultValue = "true")
-    private boolean generateJUnitXmlReports;
+    @Parameter(property = "generateJUnitXml", defaultValue = "true")
+    private boolean generateJUnitXml;
 
     @Component
     private MavenProject project;
@@ -147,13 +137,21 @@ public class FuzzingClientMojo
     @Override
     public void execute()
             throws MojoExecutionException, MojoFailureException {
-        if (port == -1) {
-            // Get some random free port
-            port = AutobahnUtils.getFreePort(host);
-        }
+
         final AtomicReference<Exception> error = new AtomicReference<Exception>();
         Thread runner = null;
         try {
+            String host;
+            try {
+                host = InetAddress.getLocalHost().getHostAddress();
+            } catch (UnknownHostException e) {
+                getLog().debug("Unable to detect localhost address, using 127.0.0.1 as fallback");
+                host = "127.0.0.1";
+            }
+            if (port == -1) {
+                // Get some random free port
+                port = AutobahnUtils.getFreePort(host);
+            }
             runner = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -189,7 +187,7 @@ public class FuzzingClientMojo
                 }
                 Socket socket = new Socket();
                 try {
-                    socket.connect( new InetSocketAddress("127.0.0.1", port));
+                    socket.connect( new InetSocketAddress(host, port));
                     break;
                 } catch (IOException e) {
                     try {
@@ -217,9 +215,9 @@ public class FuzzingClientMojo
                 excludeCases = Collections.emptyList();
             }
             List<FuzzingCaseResult> results = AutobahnTestSuite.runFuzzingClient(
-                    agent, "ws://" + host + ":" + port,  OPTIONS, cases, excludeCases);
+                    "autobahntestsuite-maven-plugin", "ws://" + host + ":" + port,  OPTIONS, cases, excludeCases);
 
-            if (generateJUnitXmlReports) {
+            if (generateJUnitXml) {
                 try {
                     writeJUnitXmlReport(results);
                 } catch (Exception e) {
