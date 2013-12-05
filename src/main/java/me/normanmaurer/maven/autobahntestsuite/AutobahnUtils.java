@@ -16,7 +16,6 @@
 package me.normanmaurer.maven.autobahntestsuite;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.ArrayList;
@@ -46,13 +45,13 @@ final class AutobahnUtils {
         return portIterator.next();
     }
 
-    static int getFreePort() {
+    static int getFreePort(String address) {
         for (int i = 0; i < NUM_CANDIDATES; i ++) {
             int port = nextCandidatePort();
             try {
                 ServerSocket ss = new ServerSocket();
                 ss.setReuseAddress(false);
-                ss.bind(new InetSocketAddress(InetAddress.getLocalHost(), port));
+                ss.bind(new InetSocketAddress(address, port));
                 ss.close();
 
                 return port;

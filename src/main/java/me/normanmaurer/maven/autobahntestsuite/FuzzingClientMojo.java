@@ -149,7 +149,7 @@ public class FuzzingClientMojo
             throws MojoExecutionException, MojoFailureException {
         if (port == -1) {
             // Get some random free port
-            port = AutobahnUtils.getFreePort();
+            port = AutobahnUtils.getFreePort(host);
         }
         final AtomicReference<Exception> error = new AtomicReference<Exception>();
         Thread runner = null;
@@ -195,7 +195,8 @@ public class FuzzingClientMojo
                     try {
                         Thread.sleep(sleepTime);
                     } catch (InterruptedException ignore) {
-                        // ignore
+                        // restore interrupt state
+                        Thread.currentThread().interrupt();
                     }
                 } finally {
                     try {
