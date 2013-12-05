@@ -147,8 +147,6 @@ public class FuzzingClientMojo
     @Override
     public void execute()
             throws MojoExecutionException, MojoFailureException {
-        Thread.currentThread().setContextClassLoader(getClassLoader());
-
         if (port == -1) {
             // Get some random free port
             port = AutobahnUtils.getFreePort();
@@ -160,6 +158,7 @@ public class FuzzingClientMojo
                 @Override
                 public void run() {
                     try {
+                        Thread.currentThread().setContextClassLoader(getClassLoader());
                         Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(mainClass);
                         Method main = clazz.getMethod("main", String[].class);
                         main.invoke(null, (Object) new String[] { String.valueOf(port) });
