@@ -26,6 +26,9 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -39,7 +42,9 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -250,7 +255,7 @@ public class FuzzingClientMojo
 
 
     private void writeJUnitXmlReport(List<FuzzingCaseResult> results)
-            throws ParserConfigurationException, TransformerException {
+            throws Exception {
         DocumentBuilderFactory docFactory = DocumentBuilderFactory .newInstance();
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
         String className = getClass().getName();
@@ -265,7 +270,7 @@ public class FuzzingClientMojo
 
         for (FuzzingCaseResult r: results) {
             Element testcase = doc.createElement("testcase");
-            testcase.setAttribute("classname", className);
+            testcase.setAttribute("classname", "AutobahnTestCase");
             testcase.setAttribute("name", r.caseName());
 
             long duration = r.duration();
@@ -274,12 +279,12 @@ public class FuzzingClientMojo
 
             FuzzingCaseResult.Behavior behavior = r.behavior();
             if (failOnNonStrict && behavior == FuzzingCaseResult.Behavior.NON_STRICT) {
-                testcase.appendChild(failure(doc, r));
+                addFailure(doc,testcase,r);
                 failures++;
             } else if (behavior!= FuzzingCaseResult.Behavior.OK
                     && behavior != FuzzingCaseResult.Behavior.INFORMATIONAL
                     && behavior != FuzzingCaseResult.Behavior.NON_STRICT) {
-                testcase.appendChild(failure(doc, r));
+                addFailure(doc, testcase, r);
                 failures++;
             }
 
@@ -300,11 +305,42 @@ public class FuzzingClientMojo
         transformer.transform(source, result);
     }
 
-    private Element failure(Document doc, FuzzingCaseResult result) {
-        Element failure = doc.createElement("failure");
-        failure.setAttribute("type", "behaviorMissmatch");
-        failure.setNodeValue("Expected behavior=[" + FuzzingCaseResult.Behavior.OK + "] but was [" + result.behavior() + "]");
-        return failure;
+    private void addFailure(Document doc, Element testCase, FuzzingCaseResult result) throws IOException, ParseException {
+
+        JSONParser parser = new JSONParser();
+        InputStreamReader reader = null;
+
+        try {
+            reader = new InputStreamReader(new FileInputStream(result.reportFile()));
+            JSONObject object = (JSONObject) parser.parse(reader);
+
+            Element sysout = doc.createElement("system-out");
+            sysout.appendChild(doc.createTextNode(object.toJSONString()));
+            testCase.appendChild(sysout);
+
+            String description = object.get("description").toString();
+            String resultText = object.get("result").toString();
+            String expected = object.get("expected").toString();
+            String received = object.get("received").toString();
+
+            StringBuffer fail = new StringBuffer();
+            fail = fail.append(description).append("\n\n");
+            fail = fail.append("Case outcome").append("\n\n");
+            fail = fail.append(resultText).append("\n\n");
+            fail = fail.append("Expected").append("\n").append(expected).append("\n\n");
+            fail = fail.append("Received").append("\n").append(received).append("\n\n");
+
+            Element failure = doc.createElement("failure");
+            failure.setAttribute("type", "behaviorMissmatch");
+            failure.appendChild(doc.createTextNode(fail.toString()));
+            testCase.appendChild(failure);
+
+        } finally {
+            if (reader != null) {
+                reader.close();
+            }
+        }
+
     }
 
 }

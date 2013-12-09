@@ -24,6 +24,7 @@ import org.python.core.PyDictionary;
 import org.python.core.PyString;
 import org.python.util.PythonInterpreter;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -89,35 +90,45 @@ public class AutobahnTestSuite {
         return dict;
     }
 
-    private static List<FuzzingCaseResult> parseResults(String agentString) throws IOException, ParseException {
+    private static List<FuzzingCaseResult> parseResults(String agentString) throws Exception {
         List<FuzzingCaseResult> results = new ArrayList<FuzzingCaseResult>();
         JSONParser parser = new JSONParser();
-        InputStreamReader reader = new InputStreamReader(new FileInputStream(OUTDIR + "/index.json"));
-        JSONObject object = (JSONObject) parser.parse(reader);
-        JSONObject agent = (JSONObject) object.get(agentString);
+        InputStreamReader reader = null;
 
-        if (agent == null) {
-            return null;
-        }
-        for (Object cases: agent.keySet()) {
-            JSONObject c = (JSONObject) agent.get(cases);
-            String behavior = (String) c.get("behavior");
-            String behaviorClose = (String) c.get("behaviorClose");
-            Number duration = (Number) c.get("duration");
-            Number remoteCloseCode = (Number) c.get("remoteCloseCode");
+        try {
+            reader = new InputStreamReader(new FileInputStream(OUTDIR + "/index.json"));
+            JSONObject object = (JSONObject) parser.parse(reader);
+            JSONObject agent = (JSONObject) object.get(agentString);
 
-            Long code;
-            if (remoteCloseCode == null) {
-                code = null;
-            } else {
-                code = remoteCloseCode.longValue();
+            if (agent == null) {
+                return null;
             }
-            String reportfile = (String) c.get("reportfile");
-            FuzzingCaseResult result = new FuzzingCaseResult(cases.toString(),
-                    FuzzingCaseResult.Behavior.parse(behavior), FuzzingCaseResult.Behavior.parse(behaviorClose),
-                    duration.longValue(), code, OUTDIR + "/" + reportfile);
+            for (Object cases : agent.keySet()) {
+                JSONObject c = (JSONObject) agent.get(cases);
+                String behavior = (String) c.get("behavior");
+                String behaviorClose = (String) c.get("behaviorClose");
+                Number duration = (Number) c.get("duration");
+                Number remoteCloseCode = (Number) c.get("remoteCloseCode");
 
-            results.add(result);
+                Long code;
+                if (remoteCloseCode == null) {
+                    code = null;
+                } else {
+                    code = remoteCloseCode.longValue();
+                }
+                String reportfile = (String) c.get("reportfile");
+                FuzzingCaseResult result = new FuzzingCaseResult(cases.toString(),
+                        FuzzingCaseResult.Behavior.parse(behavior), FuzzingCaseResult.Behavior.parse(behaviorClose),
+                        duration.longValue(), code, OUTDIR + File.separator + reportfile);
+
+                results.add(result);
+            }
+        } catch (Exception e) {
+            throw new Exception("Could not parse results" ,e);
+        } finally {
+            if (reader!=null){
+                reader.close();
+            }
         }
         return results;
     }

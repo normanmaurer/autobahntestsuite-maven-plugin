@@ -52,7 +52,7 @@ public class FuzzingCaseResult {
         this.behaviorClose = behaviorClose;
         this.duration = duration;
         this.remoteCloseCode = remoteCloseCode;
-        this.reportFile = reportFile.replace(".json", ".html");
+        this.reportFile = reportFile;
     }
 
     public String caseName() {
