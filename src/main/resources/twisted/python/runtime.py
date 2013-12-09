@@ -59,7 +59,7 @@ class Platform:
     else:
         osName = os.name
 
-    type = knownPlatforms.get(os.name)
+    type = knownPlatforms.get(osName)
     seconds = staticmethod(_timeFunctions.get(type, time.time))
     _platform = sys.platform
 
