@@ -24,7 +24,7 @@
 
   <groupId>me.normanmaurer.maven.autobahntestsuite</groupId>
   <artifactId>autobahntestsuite-maven-plugin</artifactId>
-  <version>0.1.1</version>
+  <version>0.1.2-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
   <name>AutobahnTestsuite Maven Plugin</name>
