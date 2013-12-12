@@ -49,50 +49,49 @@ startup a WebSockets server which needs to behave like:</p>
 <p>Adding the Testsuite and so make it part of your build is as easy as adding it to the pom.xml file of your
 maven project:</p>
 
-<pre><code>
-    &lt;build&gt;
-      &lt;plugin&gt;
-        &lt;groupId&gt;me.normanmaurer.maven.autobahntestsuite&lt;/groupId&gt;
-        &lt;artifactId&gt;autobahntestsuite-maven-plugin&lt;/artifactId&gt;
-        &lt;version&gt;0.1.2&lt;/version&gt;
-        &lt;configuration&gt;
-          &lt;!-- The class which contains a main method that accept the port as paramater and startup the --&gt;
-          &lt;!-- the server. --&gt;
-          &lt;mainClass&gt;io.netty.testsuite.websockets.autobahn.AutobahnServer&lt;/mainClass&gt;
+<pre><code>&lt;build&gt;
+  &lt;plugin&gt;
+    &lt;groupId&gt;me.normanmaurer.maven.autobahntestsuite&lt;/groupId&gt;
+    &lt;artifactId&gt;autobahntestsuite-maven-plugin&lt;/artifactId&gt;
+    &lt;version&gt;0.1.2&lt;/version&gt;
+    &lt;configuration&gt;
+      &lt;!-- The class which contains a main method that accept the port as paramater and startup the --&gt;
+      &lt;!-- the server. --&gt;
+      &lt;mainClass&gt;io.netty.testsuite.websockets.autobahn.AutobahnServer&lt;/mainClass&gt;
 
-          &lt;!-- Optional configuration --&gt;
-          &lt;!-- ---------------------- --&gt;
-          &lt;!-- The port to bind the server on. Default is to choose a random free port. --&gt;
-          &lt;port&gt;-1&lt;/port&gt;
+      &lt;!-- Optional configuration --&gt;
+      &lt;!-- ---------------------- --&gt;
+      &lt;!-- The port to bind the server on. Default is to choose a random free port. --&gt;
+      &lt;port&gt;-1&lt;/port&gt;
 
-          &lt;!-- The number of milliseconds to wait for the server to startup. Default is 10000 ms. --&gt;
-          &lt;waitTime&gt;10000&lt;/waitTime&gt;
+      &lt;!-- The number of milliseconds to wait for the server to startup. Default is 10000 ms. --&gt;
+      &lt;waitTime&gt;10000&lt;/waitTime&gt;
 
-          &lt;!-- Specify if a JUnit compatible Xml file will be generated. This can be used by most CI's. --&gt;
-          &lt;!-- Default is true --&gt;
-          &lt;generateJUnitXml&gt;true&lt;/generateJUnitXml&gt;
+      &lt;!-- Specify if a JUnit compatible Xml file will be generated. This can be used by most CI's. --&gt;
+      &lt;!-- Default is true --&gt;
+      &lt;generateJUnitXml&gt;true&lt;/generateJUnitXml&gt;
 
-          &lt;!-- A list of cases to execute. Default is to execute all via *.--&gt;
-          &lt;cases&gt;
-            &lt;case&gt;*&lt;/case&gt;
-          &lt;/cases&gt;
+      &lt;!-- A list of cases to execute. Default is to execute all via *.--&gt;
+      &lt;cases&gt;
+        &lt;case&gt;*&lt;/case&gt;
+      &lt;/cases&gt;
 
-          &lt;!-- A list of cases to exclude. Default is none. --&gt;
-          &lt;excludeCases&gt;&lt;/excludeCases&gt;
+      &lt;!-- A list of cases to exclude. Default is none. --&gt;
+      &lt;excludeCases&gt;&lt;/excludeCases&gt;
 
-          &lt;!-- Specify if the plugin should fail on non strict behaviour. Default is false. --&gt;
-          &lt;failOnNonStrict&gt;false&lt;/failOnNonStrict&gt;
-        &lt;/configuration&gt;
-        &lt;executions&gt;
-          &lt;execution&gt;
-            &lt;phase&gt;test&lt;/phase&gt;
-            &lt;goals&gt;
-              &lt;goal&gt;fuzzingclient&lt;/goal&gt;
-            &lt;/goals&gt;
-          &lt;/execution&gt;
-        &lt;/executions&gt;
-      &lt;/plugin&gt;
-    &lt;/build&gt;
+      &lt;!-- Specify if the plugin should fail on non strict behaviour. Default is false. --&gt;
+      &lt;failOnNonStrict&gt;false&lt;/failOnNonStrict&gt;
+    &lt;/configuration&gt;
+    &lt;executions&gt;
+      &lt;execution&gt;
+        &lt;phase&gt;test&lt;/phase&gt;
+        &lt;goals&gt;
+          &lt;goal&gt;fuzzingclient&lt;/goal&gt;
+        &lt;/goals&gt;
+      &lt;/execution&gt;
+    &lt;/executions&gt;
+  &lt;/plugin&gt;
+&lt;/build&gt;
 </code></pre>
 
 <p>This will execute the fuzzingclient tests as part of the test phase and fail the phase if one of the test cases
