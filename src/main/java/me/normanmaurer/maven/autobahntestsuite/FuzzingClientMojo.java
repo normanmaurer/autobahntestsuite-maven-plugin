@@ -34,10 +34,8 @@ import org.w3c.dom.Element;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -114,6 +112,12 @@ public class FuzzingClientMojo
     @Parameter(property = "generateJUnitXml", defaultValue = "true")
     private boolean generateJUnitXml;
 
+    /**
+     * Allow to skip execution of plugin
+     */
+    @Parameter(property = "skip", defaultValue = "false")
+    private boolean skip;
+
     @Component
     private MavenProject project;
 
@@ -138,6 +142,10 @@ public class FuzzingClientMojo
     public void execute()
             throws MojoExecutionException, MojoFailureException {
 
+        if (skip) {
+            getLog().info("Skip execution of autobahntestsuite-maven-plugin");
+            return;
+        }
         final AtomicReference<Exception> error = new AtomicReference<Exception>();
         Thread runner = null;
         try {
