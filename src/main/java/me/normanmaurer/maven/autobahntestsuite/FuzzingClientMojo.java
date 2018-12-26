@@ -118,6 +118,13 @@ public class FuzzingClientMojo
     @Parameter(property = "skip", defaultValue = "false")
     private boolean skip;
 
+    /**
+     * Set this to "true" to ignore a failure during testing. Its use is NOT RECOMMENDED, but quite convenient on
+     * occasion.
+     */
+    @Parameter( property = "maven.test.failure.ignore", defaultValue = "false" )
+    private boolean testFailureIgnore;
+
     @Component
     private MavenProject project;
 
@@ -243,7 +250,7 @@ public class FuzzingClientMojo
                     failed.add(result);
                 }
             }
-            if (!failed.isEmpty()) {
+            if (!failed.isEmpty()&&!testFailureIgnore) {
                 StringBuilder sb = new StringBuilder("\nFailed test cases:\n");
                 for (FuzzingCaseResult result: failed) {
                     sb.append("\t");
