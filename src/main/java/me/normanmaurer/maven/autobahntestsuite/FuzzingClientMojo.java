@@ -69,10 +69,17 @@ public class FuzzingClientMojo
     private static final String AGENT = "autobahntestsuite-maven-plugin";
 
     /**
+     * The IP address of the host.
+     */
+    @Parameter(property = "host")
+    private String host;
+
+    /**
      * The port on which the Server will listen.
      */
     @Parameter(defaultValue = "-1", property="port", required = true)
     private int port;
+
 
     /**
      * A list of cases to run during the test. Default is to run all cases.
@@ -156,12 +163,13 @@ public class FuzzingClientMojo
         final AtomicReference<Exception> error = new AtomicReference<Exception>();
         Thread runner = null;
         try {
-            String host;
-            try {
-                host = InetAddress.getLocalHost().getHostAddress();
-            } catch (UnknownHostException e) {
-                getLog().debug("Unable to detect localhost address, using 127.0.0.1 as fallback");
-                host = "127.0.0.1";
+            if (host == null) {
+                try {
+                    host = InetAddress.getLocalHost().getHostAddress();
+                } catch (UnknownHostException e) {
+                    getLog().debug("Unable to detect localhost address, using 127.0.0.1 as fallback");
+                    host = "127.0.0.1";
+                }
             }
             if (port == -1) {
                 // Get some random free port

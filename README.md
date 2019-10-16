@@ -27,6 +27,8 @@ maven project:
 
           <!-- Optional configuration -->
           <!-- ---------------------- -->
+           <!-- The IP address of the host/server-->
+          <host>host</host>
           <!-- The port to bind the server on. Default is to choose a random free port. -->
           <port>-1</port>
 
